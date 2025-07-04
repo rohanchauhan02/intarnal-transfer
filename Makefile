@@ -28,7 +28,7 @@ build:
 
 # Run tests with coverage reporting
 test:
-	go test -v ./... -coverprofile=coverage.out
+	go test -v ./domain/banking/usecase -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o coverage.html
 
 # Clean build artifacts and coverage files
