@@ -25,6 +25,13 @@ func NewBankingUsecase(repo banking.Repository) banking.Usecase {
 // CreateAccount creates a new account
 func (u *bankingUsecase) CreateAccount(c echo.Context, accountID int, balance string) error {
 	ac := c.(*ctx.CustomApplicationContext)
+
+	// Check if account already exists
+	existingAccount, err := u.repo.GetAccount(accountID)
+	if err == nil && existingAccount.AccountID == accountID {
+		return errors.New("account already exists with this user ID")
+	}
+
 	account := models.Account{
 		AccountID: accountID,
 		Balance:   balance,

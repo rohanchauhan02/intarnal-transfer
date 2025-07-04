@@ -1,0 +1,93 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "17c6dec5-d9c5-4f94-a15a-c302e1947b57",
+      "name": "Internal Transfers API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "updatedAt": "2024-06-11T08:10:09.000Z",
+      "createdAt": "2024-06-11T08:10:09.000Z",
+      "lastUpdatedBy": "20139577",
+      "uid": "20139577-17c6dec5-d9c5-4f94-a15a-c302e1947b57"
+    },
+    "item": [
+      {
+        "name": "Create Account",
+        "id": "af001005-7b05-4cc2-9fb6-eee3a2cfc99f",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"account_id\": 123,\n    \"initial_balance\": \"100.23344\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:11001/api/v1/accounts",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "11001",
+            "path": ["api/v1/accounts"]
+          }
+        },
+        "response": [],
+        "uid": "20139577-af001005-7b05-4cc2-9fb6-eee3a2cfc99f"
+      },
+      {
+        "name": "Get Account Balance",
+        "id": "d8033d74-ee0b-475b-a32a-65b6eed19d10",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "http://localhost:11001/api/v1/accounts/123",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "11001",
+            "path": ["api/v1/accounts", "123"]
+          }
+        },
+        "response": [],
+        "uid": "20139577-d8033d74-ee0b-475b-a32a-65b6eed19d10"
+      },
+      {
+        "name": "Submit Transaction",
+        "id": "3d22c730-94a2-419f-9ed9-51f0bd739940",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"source_account_id\": 123,\n    \"destination_account_id\": 456,\n    \"amount\": \"100.12345\"\n}"
+          },
+          "url": {
+            "raw": "http://localhost:11001/api/v1/transactions",
+            "protocol": "http",
+            "host": ["localhost"],
+            "port": "11001",
+            "path": ["api/v1/transactions"]
+          }
+        },
+        "response": [],
+        "uid": "20139577-3d22c730-94a2-419f-9ed9-51f0bd739940"
+      }
+    ]
+  }
+}
