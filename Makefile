@@ -22,6 +22,10 @@ setup: postgres
 start:
 	go run app/main.go
 
+docker-build:
+	# Build the Docker image for the application
+	docker build -t internal-transfer:latest .
+	
 # Build the application binary
 build:
 	go build -o app/main app/main.go
