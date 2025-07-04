@@ -34,3 +34,10 @@ test:
 # Clean build artifacts and coverage files
 clean:
 	rm -rf app/main coverage.out coverage.html
+
+install-mockgen:
+	go install github.com/golang/mock/mockgen@latest
+
+mock:
+	mockgen -source=domain/banking/banking.go -destination=file/mocks/mock_banking/usecase.go
+
