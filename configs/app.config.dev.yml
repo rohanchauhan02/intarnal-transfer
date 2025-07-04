@@ -1,0 +1,13 @@
+# This file is used to store environment variables for the application.
+APP_PORT: 11001
+
+DB:
+  HOST: DB_HOST
+  PORT: DB_PORT
+  NAME: DB_NAME
+  USER: DB_USER
+  PASSWORD: DB_PASSWORD
+  MAX_IDLE_CONNS: 8
+  MAX_OPEN_CONNS: 16
+  MAX_LIFETIME_CONNS: 10
+  SSL_MODE: disable
