@@ -32,4 +32,5 @@ go.work.sum
 .vscode/
 app/*
 !app/*.go
+configs/app.config.local.yml
 

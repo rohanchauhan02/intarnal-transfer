@@ -15,6 +15,11 @@ import (
 	HealthzHandler "github.com/rohanchauhan02/internal-transfer/domain/health/delivery/https"
 	HealthzRepository "github.com/rohanchauhan02/internal-transfer/domain/health/repository"
 	HealthzUsecase "github.com/rohanchauhan02/internal-transfer/domain/health/usecase"
+
+	BankingHandler "github.com/rohanchauhan02/internal-transfer/domain/banking/delivery/https"
+	BankingRepository "github.com/rohanchauhan02/internal-transfer/domain/banking/repository"
+	BankingUsecase "github.com/rohanchauhan02/internal-transfer/domain/banking/usecase"
+
 	"github.com/rohanchauhan02/internal-transfer/models"
 
 	"github.com/rohanchauhan02/internal-transfer/pkg/config"
@@ -48,10 +53,17 @@ func main() {
 	e.Use(middleware.Gzip())
 	e.Use(middleware.CORS())
 
-	// Initialize Health module
+	// Set up repositories for subdomains
 	healthzRepo := HealthzRepository.NewHealthRepository(db)
+	bankingRepo := BankingRepository.NewBankingRepository(db)
+
+	// Set up use cases for subdomains
 	healthzUsecase := HealthzUsecase.NewHealthUsecase(healthzRepo)
+	bankingUsecase := BankingUsecase.NewBankingUsecase(bankingRepo)
+
+	// Set up handlers for subdomains
 	HealthzHandler.NewHealthHandler(e, healthzUsecase)
+	BankingHandler.NewBankingHandler(e, bankingUsecase)
 
 	// Start server in a separate goroutine
 	serverAddr := fmt.Sprintf(":%d", cnf.GetPort())
