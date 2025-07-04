@@ -15,6 +15,7 @@ import (
 	HealthzHandler "github.com/rohanchauhan02/internal-transfer/domain/health/delivery/https"
 	HealthzRepository "github.com/rohanchauhan02/internal-transfer/domain/health/repository"
 	HealthzUsecase "github.com/rohanchauhan02/internal-transfer/domain/health/usecase"
+	"github.com/rohanchauhan02/internal-transfer/models"
 
 	"github.com/rohanchauhan02/internal-transfer/pkg/config"
 	"github.com/rohanchauhan02/internal-transfer/pkg/database"
@@ -31,6 +32,13 @@ func main() {
 	db, err := postgresClient.InitClient(context.Background())
 	if err != nil {
 		log.Panicf("Failed to initialize database: %s ", err.Error())
+	}
+	// Auto migrate models
+	if err := db.AutoMigrate(
+		&models.Account{},
+		&models.Transaction{},
+	); err != nil {
+		log.Panicf("Failed to auto migrate models: %s ", err.Error())
 	}
 
 	e.Pre(middleware.RemoveTrailingSlash())
