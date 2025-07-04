@@ -23,7 +23,7 @@ func NewBankingHandler(e *echo.Echo, usecase banking.Usecase) {
 	api := e.Group("/api/v1")
 	api.POST("/accounts", handler.CreateAccount)
 	api.GET("/accounts/:id", handler.GetAccount)
-	api.POST("/transactions", handler.Transection)
+	api.POST("/transactions", handler.Transaction)
 }
 
 func (h *bankingHandler) CreateAccount(c echo.Context) error {
@@ -32,7 +32,7 @@ func (h *bankingHandler) CreateAccount(c echo.Context) error {
 	if err := ac.CustomBind(&account); err != nil {
 		return ac.CustomResponse("Bad Request", nil, "", "Invalid request", http.StatusBadRequest, nil)
 	}
-	if err := h.usecase.CreateAccount(account.AccountID, account.InitialBalance); err != nil {
+	if err := h.usecase.CreateAccount(c, account.AccountID, account.InitialBalance); err != nil {
 		return ac.CustomResponse("Internal Server Error", nil, "", "Failed to create account", http.StatusInternalServerError, nil)
 	}
 	return ac.CustomResponse("Success", nil, "Account created successfully", "", http.StatusCreated, nil)
@@ -55,13 +55,13 @@ func (h *bankingHandler) GetAccount(c echo.Context) error {
 	return ac.CustomResponse("Success", account, "Account retrieved successfully", "", http.StatusOK, nil)
 }
 
-func (h *bankingHandler) Transection(c echo.Context) error {
+func (h *bankingHandler) Transaction(c echo.Context) error {
 	ac := c.(*ctx.CustomApplicationContext)
 	var transaction dto.TransactionRequest
-	if err := c.Bind(&transaction); err != nil {
+	if err := ac.CustomBind(&transaction); err != nil {
 		return ac.CustomResponse("Bad Request", nil, "", "Invalid request body", http.StatusBadRequest, nil)
 	}
-	if err := h.usecase.Transection(transaction.SourceAccountID, transaction.DestinationAccountID,
+	if err := h.usecase.Transaction(c, transaction.SourceAccountID, transaction.DestinationAccountID,
 		transaction.Amount); err != nil {
 		return ac.CustomResponse("Internal Server Error", nil, "", "Transaction failed: "+err.Error(), http.StatusInternalServerError, nil)
 	}

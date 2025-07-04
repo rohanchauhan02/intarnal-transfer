@@ -5,8 +5,10 @@ go 1.24
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/uuid v1.6.0
+	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
+	github.com/shopspring/decimal v1.4.0
 	github.com/spf13/viper v1.20.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.0

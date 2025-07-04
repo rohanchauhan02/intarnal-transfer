@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"errors"
-	"strconv"
 
+	"github.com/labstack/echo/v4"
 	"github.com/rohanchauhan02/internal-transfer/domain/banking"
 	"github.com/rohanchauhan02/internal-transfer/dto"
 	"github.com/rohanchauhan02/internal-transfer/models"
+	"github.com/rohanchauhan02/internal-transfer/pkg/ctx"
+	"github.com/shopspring/decimal"
 )
 
 type bankingUsecase struct {
@@ -21,12 +23,29 @@ func NewBankingUsecase(repo banking.Repository) banking.Usecase {
 }
 
 // CreateAccount creates a new account
-func (u *bankingUsecase) CreateAccount(accountID int, balance string) error {
+func (u *bankingUsecase) CreateAccount(c echo.Context, accountID int, balance string) error {
+	ac := c.(*ctx.CustomApplicationContext)
 	account := models.Account{
 		AccountID: accountID,
 		Balance:   balance,
 	}
-	return u.repo.CreateAccount(account)
+	tx := ac.PostgresDB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if err := tx.Error; err != nil {
+		return errors.New("failed to start transaction")
+	}
+	if err := u.repo.CreateAccount(tx, account); err != nil {
+		tx.Rollback()
+		return errors.New("failed to create account: " + err.Error())
+	}
+	if err := tx.Commit().Error; err != nil {
+		return errors.New("failed to commit transaction: " + err.Error())
+	}
+	return nil
 }
 
 // GetAccount retrieves account details by account ID
@@ -41,48 +60,61 @@ func (u *bankingUsecase) GetAccount(accountID int) (dto.AccountResponse, error) 
 	}, nil
 }
 
-// Transection transfers funds between accounts
-func (u *bankingUsecase) Transection(fromAccountID int, toAccountID int, amount string) error {
-	fromAccount, err := u.repo.GetAccount(fromAccountID)
+// Transaction transfers funds between accounts
+func (u *bankingUsecase) Transaction(c echo.Context, fromAccountID int, toAccountID int, amount string) error {
+	ac := c.(*ctx.CustomApplicationContext)
+	tx := ac.PostgresDB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if err := tx.Error; err != nil {
+		return errors.New("failed to start transaction")
+	}
+
+	fromAccount, err := u.repo.GetAccountTx(tx, fromAccountID)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	toAccount, err := u.repo.GetAccount(toAccountID)
+	toAccount, err := u.repo.GetAccountTx(tx, toAccountID)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	// Convert balances and amount to float64 for arithmetic
-	fromBalance, err := strconv.ParseFloat(fromAccount.Balance, 64)
+	fromBalance, err := decimal.NewFromString(fromAccount.Balance)
 	if err != nil {
+		tx.Rollback()
 		return errors.New("invalid balance in sender's account")
 	}
-	toBalance, err := strconv.ParseFloat(toAccount.Balance, 64)
+	toBalance, err := decimal.NewFromString(toAccount.Balance)
 	if err != nil {
+		tx.Rollback()
 		return errors.New("invalid balance in receiver's account")
 	}
-	transferAmount, err := strconv.ParseFloat(amount, 64)
+	transferAmount, err := decimal.NewFromString(amount)
 	if err != nil {
+		tx.Rollback()
 		return errors.New("invalid transfer amount")
 	}
 
-	// Check if sufficient balance is available
-	if fromBalance < transferAmount {
+	if fromBalance.LessThan(transferAmount) {
+		tx.Rollback()
 		return errors.New("insufficient balance")
 	}
 
-	// Deduct amount from sender's account
-	fromBalance -= transferAmount
-	fromAccount.Balance = strconv.FormatFloat(fromBalance, 'f', -1, 64)
-	if err := u.repo.UpdateAccount(fromAccount); err != nil {
+	fromAccount.Balance = fromBalance.Sub(transferAmount).String()
+	if err := u.repo.UpdateAccount(tx, fromAccount); err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	// Add amount to receiver's account
-	toBalance += transferAmount
-	toAccount.Balance = strconv.FormatFloat(toBalance, 'f', -1, 64)
-	if err := u.repo.UpdateAccount(toAccount); err != nil {
+	toAccount.Balance = toBalance.Add(transferAmount).String()
+	if err := u.repo.UpdateAccount(tx, toAccount); err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -91,8 +123,14 @@ func (u *bankingUsecase) Transection(fromAccountID int, toAccountID int, amount 
 		DestinationAccountID: toAccountID,
 		Amount:               amount,
 	}
-	if err := u.repo.Transection(transaction); err != nil {
+
+	if err := u.repo.Transaction(tx, transaction); err != nil {
+		tx.Rollback()
 		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return errors.New("failed to commit transaction: " + err.Error())
 	}
 
 	return nil

@@ -19,6 +19,7 @@ import (
 	HealthzHandler "github.com/rohanchauhan02/internal-transfer/domain/health/delivery/https"
 	HealthzRepository "github.com/rohanchauhan02/internal-transfer/domain/health/repository"
 	HealthzUsecase "github.com/rohanchauhan02/internal-transfer/domain/health/usecase"
+	"github.com/rohanchauhan02/internal-transfer/utils"
 
 	"github.com/rohanchauhan02/internal-transfer/models"
 	"github.com/rohanchauhan02/internal-transfer/pkg/config"
@@ -67,6 +68,10 @@ func main() {
 			return next(customCtx)
 		}
 	})
+
+	// Set validator globally
+	validator := utils.DefaultValidator()
+	e.Validator = validator
 
 	// Set up repositories for subdomains
 	healthzRepo := HealthzRepository.NewHealthRepository(db)
