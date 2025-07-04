@@ -14,6 +14,10 @@ A robust internal transfers application developed using Golang and PostgreSQL.
 - PostgreSQL
 - HTTP RESTful APIs
 
+## 📬 Postman Collection
+
+You can try out the API using the [Postman collection](docs/postman.json).
+
 ## 🚀 Getting Started
 
 ### 1. Clone the Repository
