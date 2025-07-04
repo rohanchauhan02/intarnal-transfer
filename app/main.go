@@ -12,18 +12,20 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	HealthzHandler "github.com/rohanchauhan02/internal-transfer/domain/health/delivery/https"
-	HealthzRepository "github.com/rohanchauhan02/internal-transfer/domain/health/repository"
-	HealthzUsecase "github.com/rohanchauhan02/internal-transfer/domain/health/usecase"
 
 	BankingHandler "github.com/rohanchauhan02/internal-transfer/domain/banking/delivery/https"
 	BankingRepository "github.com/rohanchauhan02/internal-transfer/domain/banking/repository"
 	BankingUsecase "github.com/rohanchauhan02/internal-transfer/domain/banking/usecase"
+	HealthzHandler "github.com/rohanchauhan02/internal-transfer/domain/health/delivery/https"
+	HealthzRepository "github.com/rohanchauhan02/internal-transfer/domain/health/repository"
+	HealthzUsecase "github.com/rohanchauhan02/internal-transfer/domain/health/usecase"
 
 	"github.com/rohanchauhan02/internal-transfer/models"
-
 	"github.com/rohanchauhan02/internal-transfer/pkg/config"
+	"github.com/rohanchauhan02/internal-transfer/pkg/ctx"
 	"github.com/rohanchauhan02/internal-transfer/pkg/database"
+
+	CustomMiddileware "github.com/rohanchauhan02/internal-transfer/pkg/middleware"
 )
 
 func main() {
@@ -46,12 +48,25 @@ func main() {
 		log.Panicf("Failed to auto migrate models: %s ", err.Error())
 	}
 
+	// add request ID middleware
+	e.Use(CustomMiddileware.MiddlewareRequestID())
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 	e.Use(middleware.Gzip())
 	e.Use(middleware.CORS())
+
+	// Middleware to inject dependencies into the request context
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			customCtx := &ctx.CustomApplicationContext{
+				Context:    c,
+				PostgresDB: db,
+			}
+			return next(customCtx)
+		}
+	})
 
 	// Set up repositories for subdomains
 	healthzRepo := HealthzRepository.NewHealthRepository(db)

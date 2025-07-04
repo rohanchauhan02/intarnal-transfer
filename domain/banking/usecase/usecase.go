@@ -82,5 +82,18 @@ func (u *bankingUsecase) Transection(fromAccountID int, toAccountID int, amount 
 	// Add amount to receiver's account
 	toBalance += transferAmount
 	toAccount.Balance = strconv.FormatFloat(toBalance, 'f', -1, 64)
-	return u.repo.UpdateAccount(toAccount)
+	if err := u.repo.UpdateAccount(toAccount); err != nil {
+		return err
+	}
+
+	transaction := models.Transaction{
+		SourceAccountID:      fromAccountID,
+		DestinationAccountID: toAccountID,
+		Amount:               amount,
+	}
+	if err := u.repo.Transection(transaction); err != nil {
+		return err
+	}
+
+	return nil
 }

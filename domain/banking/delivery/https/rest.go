@@ -1,11 +1,13 @@
 package https
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rohanchauhan02/internal-transfer/domain/banking"
 	"github.com/rohanchauhan02/internal-transfer/dto"
+	"github.com/rohanchauhan02/internal-transfer/pkg/ctx"
 )
 
 type bankingHandler struct {
@@ -25,43 +27,43 @@ func NewBankingHandler(e *echo.Echo, usecase banking.Usecase) {
 }
 
 func (h *bankingHandler) CreateAccount(c echo.Context) error {
-	// Implementation for creating an account
+	ac := c.(*ctx.CustomApplicationContext)
 	var account dto.AccountCreationRequest
-	if err := c.Bind(&account); err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid request"})
+	if err := ac.CustomBind(&account); err != nil {
+		return ac.CustomResponse("Bad Request", nil, "", "Invalid request", http.StatusBadRequest, nil)
 	}
 	if err := h.usecase.CreateAccount(account.AccountID, account.InitialBalance); err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to create account"})
+		return ac.CustomResponse("Internal Server Error", nil, "", "Failed to create account", http.StatusInternalServerError, nil)
 	}
-	return c.JSON(201, map[string]string{"message": "Account created successfully"})
+	return ac.CustomResponse("Success", nil, "Account created successfully", "", http.StatusCreated, nil)
 }
 
 func (h *bankingHandler) GetAccount(c echo.Context) error {
-	// Implementation for getting account details
+	ac := c.(*ctx.CustomApplicationContext)
 	accountID := c.Param("id")
 	if accountID == "" {
-		return c.JSON(400, map[string]string{"error": "Account ID is required"})
+		return ac.CustomResponse("Bad Request", nil, "", "Account ID is required", http.StatusBadRequest, nil)
 	}
 	id, err := strconv.Atoi(accountID)
 	if err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid Account ID"})
+		return ac.CustomResponse("Bad Request", nil, "", "Invalid account ID format", http.StatusBadRequest, nil)
 	}
 	account, err := h.usecase.GetAccount(id)
 	if err != nil {
-		return c.JSON(404, map[string]string{"error": "Account not found"})
+		return ac.CustomResponse("Internal Server Error", nil, "", "Failed to retrieve account", http.StatusInternalServerError, nil)
 	}
-	return c.JSON(201, account)
+	return ac.CustomResponse("Success", account, "Account retrieved successfully", "", http.StatusOK, nil)
 }
 
 func (h *bankingHandler) Transection(c echo.Context) error {
-	// Implementation for transferring funds between accounts
+	ac := c.(*ctx.CustomApplicationContext)
 	var transaction dto.TransactionRequest
 	if err := c.Bind(&transaction); err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid request"})
+		return ac.CustomResponse("Bad Request", nil, "", "Invalid request body", http.StatusBadRequest, nil)
 	}
 	if err := h.usecase.Transection(transaction.SourceAccountID, transaction.DestinationAccountID,
 		transaction.Amount); err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to process transaction"})
+		return ac.CustomResponse("Internal Server Error", nil, "", "Transaction failed: "+err.Error(), http.StatusInternalServerError, nil)
 	}
-	return c.JSON(200, map[string]string{"message": "Transaction successful"})
+	return ac.CustomResponse("Success", nil, "Transaction completed successfully", "", http.StatusOK, nil)
 }

@@ -25,7 +25,7 @@ func (r *bankingRepository) CreateAccount(account models.Account) error {
 // GetAccount retrieves an account by its ID
 func (r *bankingRepository) GetAccount(accountID int) (models.Account, error) {
 	var account models.Account
-	if err := r.db.First(&account, accountID).Error; err != nil {
+	if err := r.db.Where("account_id", accountID).Find(&account).Error; err != nil {
 		return models.Account{}, err
 	}
 	return account, nil
@@ -34,4 +34,9 @@ func (r *bankingRepository) GetAccount(accountID int) (models.Account, error) {
 // UpdateAccount updates an existing account in the database
 func (r *bankingRepository) UpdateAccount(account models.Account) error {
 	return r.db.Save(&account).Error
+}
+
+// Transection processes a transaction between accounts
+func (r *bankingRepository) Transection(transaction models.Transaction) error {
+	return r.db.Create(&transaction).Error
 }

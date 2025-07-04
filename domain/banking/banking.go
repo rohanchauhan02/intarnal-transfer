@@ -14,4 +14,5 @@ type Repository interface {
 	CreateAccount(account models.Account) error
 	GetAccount(accountID int) (models.Account, error)
 	UpdateAccount(account models.Account) error
+	Transection(transaction models.Transaction) error
 }
